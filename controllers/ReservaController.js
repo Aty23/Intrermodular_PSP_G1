@@ -77,8 +77,38 @@ const deleteReserva = async (req, res) => {
   }
 };
 
+//getFilter
+const getFilter = async (req, res) => {
+  const filters = req.body;
+
+  // Construir los filtros dinámicamente
+  const query = {};
+  if (filters.id) query.id = filters.id;
+  if (filters.idHabitacion) query.idHabitacion = filters.idHabitacion;
+  if (filters["cliente.email"]) query["cliente.email"] = filters["cliente.email"];
+  if (filters.numPersonas) query.numPersonas = filters.numPersonas;
+  if (filters.fechaInicio) query.fechaInicio = new Date(filters.fechaInicio);
+  if (filters.fechaSalida) query.fechaSalida = new Date(filters.fechaSalida);
+  if (filters.tipoHabitacion) query.tipoHabitacion = filters.tipoHabitacion;
+
+  console.log("Consulta generada:", query);
+
+  try {
+    const reservas = await Reserva.find(query);
+    if (!reservas.length) {
+      return res.status(404).json({ message: "No se encontraron reservas con los filtros proporcionados." });
+    }
+
+    res.status(200).json(reservas);
+  } catch (error) {
+    res.status(500).json({ error: "Error al filtrar reservas: " + error.message });
+  }
+};
+
+
 module.exports = {
   createReserva,
   getAllReservas,
   deleteReserva,
+  getFilter,
 };
