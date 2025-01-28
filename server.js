@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/UserRoutes');
+const reservaRoutes = require('./routes/ReservaRoutes');
 
 const app = express();
 const PORT = 3000;
@@ -23,6 +24,7 @@ app.get('/status', (req, res) => {
 
 //rutas
 app.use('/users', userRoutes);
+app.use('/reservas', reservaRoutes)
 
 //iniciar el server
 app.listen(PORT, () => {
