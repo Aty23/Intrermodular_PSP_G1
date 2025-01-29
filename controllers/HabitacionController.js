@@ -5,7 +5,7 @@ const path = require('path');
 // Crear una nueva habitación
 const createHabitacion = async (req, res) => {
   try {
-    const { idHabitacion, precio, tipoHabitacion, numPersonas, estado, extras, imagenes } = req.body;
+    const { idHabitacion, precio, tipoHabitacion, numPersonas, estado, tamanyo, descripcion, extras, imagenes } = req.body;
 
 
     const nuevaHabitacion = new Habitacion({
@@ -14,6 +14,8 @@ const createHabitacion = async (req, res) => {
       tipoHabitacion,
       numPersonas,
       estado,
+      tamanyo,
+      descripcion,
       extras: extras || [],
       imagenes: imagenes || [],
     });

@@ -20,13 +20,35 @@ const HabitacionSchema = new mongoose.Schema({
   },
   numPersonas: {
     type: Number,
-    trim: true,
-    default: 0, 
+    default: 1, 
+    min: 1,
+    validate: {
+      validator: function (num) {
+        const capacidadMaxima = {
+          'Sencilla': 1,
+          'Doble': 2,
+          'Triple': 3,
+          'Suite': 4,
+        };
+        return num <= capacidadMaxima[this.tipoHabitacion];
+      },
+      message: props => `El número de personas (${props.value}) excede la capacidad de una habitación ${props.instance.tipoHabitacion}.`,
+    },
   },
   estado: {
     type: String,
     enum: ['Disponible', 'Mantenimiento'],
     default: 'Disponible',
+  },
+  tamanyo: {  
+    type: Number,
+    required: true,
+    min: [5, 'El tamaño mínimo permitido es 5m².'],
+  },
+  descripcion: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'La descripción no puede superar los 500 caracteres.'],
   },
   imagenes: {
     type: [String],
