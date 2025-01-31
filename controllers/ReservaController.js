@@ -1,5 +1,6 @@
 const Reserva = require("../models/ReservaModel");
 const nodemailer = require("nodemailer");
+const Notificacion = require("../models/NotificacionModel");
 
 const transporter = nodemailer.createTransport({
   host: "in-v3.mailjet.com",
@@ -47,35 +48,65 @@ const createReserva = async (req, res) => {
 
     await newReserva.save();
 
-    if (cliente?.email) {
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Creada reserva con ID: ${newReserva.id}`,
+      fecha: new Date(),
+      tipo: "reserva", // Puedes categorizarlo si quieres
+    });
+
+    await nuevaNotificacion.save();
+
+    /*if (cliente?.email) {
       const mailOptions = {
         from: "intermodularg1@gmail.com", 
         to: cliente.email,
         subject: "Confirmación de Reserva 🏨 - Hotel Pere Maria",
         html: `
-          <h2>¡Tu reserva está confirmada! ✅</h2>
-          <p>Hola <strong>${cliente.nombre || "Cliente"}</strong>,</p>
-          <p>Tu reserva ha sido creada exitosamente.</p>
-          <ul>
-            <li><strong>Habitación:</strong> ${idHabitacion}</li>
-            <li><strong>Tipo:</strong> ${tipoHabitacion || "No especificado"}</li>
-            <li><strong>Fecha de entrada:</strong> ${new Date(fechaInicio).toLocaleDateString()}</li>
-            <li><strong>Fecha de salida:</strong> ${new Date(fechaSalida).toLocaleDateString()}</li>
-            <li><strong>Número de personas:</strong> ${numPersonas}</li>
-            <li><strong>Extras:</strong> ${extras}</li>
-            <li><strong>Precio:</strong> $${precio}</li>
-          </ul>
-          <p>¡Gracias por confiar en nosotros! 🏨✨</p>
+          <table width="100%" cellspacing="0" cellpadding="0" border="0">
+  <tr>
+    <!-- Columna izquierda: Texto -->
+    <td width="50%" style="padding: 20px; vertical-align: top;">
+      <h2 style="font-family: Arial, sans-serif; 
+           font-size: 28px; 
+           font-weight: bold; 
+           color: #248195; 
+           margin: 0; 
+           padding-bottom: 10px;">
+  ¡Tu reserva está confirmada!
+</h2>
+      <p>Hola <strong>${cliente.nombre || "Cliente"}</strong>,</p>
+      <p>Tu reserva ha sido creada exitosamente.</p>
+      <ul>
+        <li><strong>Habitación:</strong> ${idHabitacion}</li>
+        <li><strong>Tipo:</strong> ${tipoHabitacion || "No especificado"}</li>
+        <li><strong>Fecha de entrada:</strong> ${new Date(fechaInicio).toLocaleDateString()}</li>
+        <li><strong>Fecha de salida:</strong> ${new Date(fechaSalida).toLocaleDateString()}</li>
+        <li><strong>Número de personas:</strong> ${numPersonas}</li>
+        <li><strong>Extras:</strong> ${extras}</li>
+        <li><strong>Precio:</strong> ${precio}€</li>
+      </ul>
+      <p>¡Gracias por confiar en nosotros! 🏨✨</p>
+    </td>
+
+    <!-- Columna derecha: Imagen 100% -->
+    <td width="50%" style="padding: 0; margin: 0;">
+      <img src="https://i.imgur.com/0NYwFWh.jpeg" 
+           alt="Habitación del Hotel" 
+           style="width: 100%; height: auto; display: block; border-radius: 0;">
+    </td>
+  </tr>
+</table>
         `,
       };
 
       await transporter.sendMail(mailOptions);
       console.log("Correo enviado correctamente a", cliente.email);
-    }
+    }*/
 
     res.status(201).json({
       message: "Reserva creada con éxito",
       reserva: newReserva,
+      notificacion: nuevaNotificacion,
     });
   } catch (error) {
     res.status(400).json({ error: `Error al crear la reserva: ${error.message}` });
