@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
-const Counter = require('./CounterModel');
+
+const preciosPorTipo = {
+  Sencilla: 30,
+  Doble: 55,
+  Triple: 75,
+  Suite: 100
+};
 
 const HabitacionSchema = new mongoose.Schema({
   idHabitacion: {
     type: Number, 
     trim: true,
     required: true,
-  },
-  precio: {
-    type: Number,
-    trim: true,
-    default: 0, 
-    min: 0,
   },
   tipoHabitacion: {
     type: String,
@@ -54,12 +54,12 @@ const HabitacionSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  extras: {
+  servicios: {
     type: [String],
     default: [], 
     validate: {
       validator: function (extras) {
-        const validExtras = ['Desayuno','Cama extra', 'Cuna'];
+        const validExtras = ['MiniBar','', 'Cuna'];
         return extras.every(extra => validExtras.includes(extra));
       },
       message: 'Extras no válidos.',
@@ -69,6 +69,10 @@ const HabitacionSchema = new mongoose.Schema({
   collection: 'Habitaciones',
   toJSON: { virtuals: true }, 
   toObject: { virtuals: true },
+});
+
+HabitacionSchema.virtual('precio').get(function () {
+  return preciosPorTipo[this.tipoHabitacion] || 0;
 });
 
 const Habitacion = mongoose.model('Habitacion', HabitacionSchema);
