@@ -1,4 +1,15 @@
 const Reserva = require("../models/ReservaModel");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: "in-v3.mailjet.com",
+  port: 587,
+  secure: false, 
+  auth: {
+    user: "90ee211aa33335b62dda29df50bfb1ab",  
+    pass: "463687e50af2a69a09cdf288bb8a298f" 
+  }
+});
 
 //create
 const createReserva = async (req, res) => {
@@ -35,6 +46,32 @@ const createReserva = async (req, res) => {
     });
 
     await newReserva.save();
+
+    if (cliente?.email) {
+      const mailOptions = {
+        from: "intermodularg1@gmail.com", 
+        to: cliente.email,
+        subject: "Confirmación de Reserva 🏨 - Hotel Pere Maria",
+        html: `
+          <h2>¡Tu reserva está confirmada! ✅</h2>
+          <p>Hola <strong>${cliente.nombre || "Cliente"}</strong>,</p>
+          <p>Tu reserva ha sido creada exitosamente.</p>
+          <ul>
+            <li><strong>Habitación:</strong> ${idHabitacion}</li>
+            <li><strong>Tipo:</strong> ${tipoHabitacion || "No especificado"}</li>
+            <li><strong>Fecha de entrada:</strong> ${new Date(fechaInicio).toLocaleDateString()}</li>
+            <li><strong>Fecha de salida:</strong> ${new Date(fechaSalida).toLocaleDateString()}</li>
+            <li><strong>Número de personas:</strong> ${numPersonas}</li>
+            <li><strong>Extras:</strong> ${extras}</li>
+            <li><strong>Precio:</strong> $${precio}</li>
+          </ul>
+          <p>¡Gracias por confiar en nosotros! 🏨✨</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log("Correo enviado correctamente a", cliente.email);
+    }
 
     res.status(201).json({
       message: "Reserva creada con éxito",
