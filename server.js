@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/UserRoutes');
 const reservaRoutes = require('./routes/ReservaRoutes');
-const habitacionRoutes = require('./routes/HabitacionRoutes'); 
+const habitacionRoutes = require('./routes/HabitacionRoutes');
+const tipoHabitacionRoutes = require('./routes/TipoHabitacionRoutes');
 const path = require('path');
 
 const app = express();
@@ -32,6 +33,7 @@ app.get('/status', (req, res) => {
 app.use('/users', userRoutes);
 app.use('/reservas', reservaRoutes);
 app.use('/habitaciones', habitacionRoutes);
+app.use('/tipos-habitacion', tipoHabitacionRoutes);
 
 //imagenes estáticas
 app.use('/images', express.static(path.join(__dirname, 'images')));
