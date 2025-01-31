@@ -105,10 +105,47 @@ const getFilter = async (req, res) => {
   }
 };
 
+// updateReserva
+const updateReserva = async (req, res) => {
+  try {
+    const { id, idHabitacion, cliente, precio, fechaInicio, fechaSalida, tipoHabitacion, numPersonas, extras } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "El ID de la reserva es obligatorio para la actualización." });
+    }
+
+    const reservaActualizada = await Reserva.findOneAndUpdate(
+      { id: id },
+      {
+        idHabitacion,
+        cliente: {
+          nombre: cliente?.nombre || "Sin nombre",
+          email: cliente?.email || "Sin email",
+        },
+        precio,
+        fechaInicio,
+        fechaSalida,
+        tipoHabitacion,
+        numPersonas,
+        extras,
+      },
+      { new: true } 
+    );
+
+    if (!reservaActualizada) {
+      return res.status(404).json({ message: "Reserva no encontrada." });
+    }
+
+    res.status(200).json({ message: "Reserva actualizada correctamente.", reserva: reservaActualizada });
+  } catch (error) {
+    res.status(500).json({ error: `Error al actualizar la reserva: ${error.message}` });
+  }
+};
 
 module.exports = {
   createReserva,
   getAllReservas,
   deleteReserva,
   getFilter,
+  updateReserva,
 };
