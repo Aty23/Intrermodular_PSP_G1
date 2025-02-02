@@ -32,10 +32,14 @@ const getAllTiposHabitacion = async (req, res) => {
 // Actualizar un tipo de habitación
 const updateTipoHabitacion = async (req, res) => {
   try {
-    const { id, precioBase, capacidadMaxima, servicios } = req.body;
+    const { id, nombre, precioBase, capacidadMaxima, servicios } = req.body;
 
-    const tipo = await TipoHabitacion.findByIdAndUpdate(
-      id,
+    if (!nombre || !precioBase || isNaN(precioBase) || precioBase < 0) {
+      return res.status(400).json({ message: "Se requiere un nombre válido y un precio positivo." });
+    }
+
+    const tipo = await TipoHabitacion.findOneAndUpdate(
+      {nombre},
       { precioBase, capacidadMaxima, servicios },
       { new: true }
     );
