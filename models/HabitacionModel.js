@@ -1,39 +1,21 @@
 const mongoose = require('mongoose');
 
-const preciosPorTipo = {
-  Sencilla: 30,
-  Doble: 55,
-  Triple: 75,
-  Suite: 100
-};
-
 const HabitacionSchema = new mongoose.Schema({
   idHabitacion: {
     type: Number, 
     trim: true,
     required: true,
+    unique: true
   },
   tipoHabitacion: {
-    type: String,
-    enum: ['Sencilla', 'Doble', 'Triple', 'Suite'],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TipoHabitacion',
     required: true,
   },
   numPersonas: {
     type: Number,
-    default: 1, 
+    default: 1,
     min: 1,
-    validate: {
-      validator: function (num) {
-        const capacidadMaxima = {
-          'Sencilla': 1,
-          'Doble': 2,
-          'Triple': 3,
-          'Suite': 4,
-        };
-        return num <= capacidadMaxima[this.tipoHabitacion];
-      },
-      message: props => `El número de personas (${props.value}) excede la capacidad de una habitación ${props.instance.tipoHabitacion}.`,
-    },
   },
   estado: {
     type: String,
@@ -54,25 +36,14 @@ const HabitacionSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  servicios: {
-    type: [String],
-    default: [], 
-    validate: {
-      validator: function (extras) {
-        const validExtras = ['MiniBar','', 'Cuna'];
-        return extras.every(extra => validExtras.includes(extra));
-      },
-      message: 'Extras no válidos.',
-    },
-  },
 }, {
   collection: 'Habitaciones',
-  toJSON: { virtuals: true }, 
-  toObject: { virtuals: true },
+  toJSON: { virtuals: true, versionKey: false}, 
+  toObject: { virtuals: true, versionKey: false },
 });
 
 HabitacionSchema.virtual('precio').get(function () {
-  return preciosPorTipo[this.tipoHabitacion] || 0;
+  return this.tipoHabitacion?.precioBase || 0;
 });
 
 const Habitacion = mongoose.model('Habitacion', HabitacionSchema);
