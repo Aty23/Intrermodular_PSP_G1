@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const NotificacionSchema = new mongoose.Schema({
   mensaje: { type: String, required: true },
   fecha: { type: Date, default: Date.now },
-  tipo: { type: String, default: "general" }, // Puede ser "reserva", "cancelación", etc.
+  tipo: { type: String, default: "general" },
+  visto: { type: Boolean, default: false },
 },
 {collection: "Notificaciones"});
 
