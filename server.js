@@ -35,6 +35,7 @@ app.use('/users', userRoutes);
 app.use('/reservas', reservaRoutes);
 app.use('/habitaciones', habitacionRoutes);
 app.use('/tipos-habitacion', tipoHabitacionRoutes);
+app.use('/notificaciones', notificacionesRoutes)
 
 //imagenes estáticas
 app.use('/images', express.static(path.join(__dirname, 'images')));

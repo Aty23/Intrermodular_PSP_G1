@@ -5,11 +5,11 @@ const Notificacion = require("../models/NotificacionModel");
 const transporter = nodemailer.createTransport({
   host: "in-v3.mailjet.com",
   port: 587,
-  secure: false, 
+  secure: false,
   auth: {
-    user: "90ee211aa33335b62dda29df50bfb1ab",  
-    pass: "463687e50af2a69a09cdf288bb8a298f" 
-  }
+    user: "90ee211aa33335b62dda29df50bfb1ab",
+    pass: "463687e50af2a69a09cdf288bb8a298f",
+  },
 });
 
 //create
@@ -28,19 +28,27 @@ const createReserva = async (req, res) => {
 
     if (!idHabitacion || !fechaInicio || !fechaSalida) {
       return res.status(400).json({
-        message: "Los campos idHabitacion, fechaInicio y fechaSalida son obligatorios",
+        message:
+          "Los campos idHabitacion, fechaInicio y fechaSalida son obligatorios",
       });
     }
 
+    const fechaInicioUTC = new Date(req.body.fechaInicio);
+    const fechaSalidaUTC = new Date(req.body.fechaSalida);
+
+    // Corregir la fecha sumando un día
+    fechaInicioUTC.setDate(fechaInicioUTC.getDate() + 1);
+    fechaSalidaUTC.setDate(fechaSalidaUTC.getDate() + 1);
+
     const newReserva = new Reserva({
-      idHabitacion, 
+      idHabitacion,
       cliente: {
         nombre: cliente?.nombre || "Sin nombre",
         email: cliente?.email || "Sin email",
       },
       precio: precio || 0,
-      fechaInicio,
-      fechaSalida,
+      fechaInicio: fechaInicioUTC,
+      fechaSalida: fechaSalidaUTC,
       tipoHabitacion: tipoHabitacion || "Sin especificar",
       numPersonas: numPersonas || 1,
       extras: extras || 0,
@@ -109,10 +117,11 @@ const createReserva = async (req, res) => {
       notificacion: nuevaNotificacion,
     });
   } catch (error) {
-    res.status(400).json({ error: `Error al crear la reserva: ${error.message}` });
+    res
+      .status(400)
+      .json({ error: `Error al crear la reserva: ${error.message}` });
   }
 };
-
 
 //get all
 const getAllReservas = async (req, res) => {
@@ -127,21 +136,27 @@ const getAllReservas = async (req, res) => {
 //delete
 const deleteReserva = async (req, res) => {
   try {
-      const { id } = req.body;
+    const { id } = req.body;
 
-      if (!id) {
-          return res.status(400).json({ message: "Se requiere el id de la reserva para eliminarla." });
-      }
+    if (!id) {
+      return res
+        .status(400)
+        .json({ message: "Se requiere el id de la reserva para eliminarla." });
+    }
 
-      const reserva = await Reserva.findOneAndDelete({ id: Number(id) });
+    const reserva = await Reserva.findOneAndDelete({ id: Number(id) });
 
-      if (!reserva) {
-          return res.status(404).json({ message: "Reserva no encontrada." });
-      }
+    if (!reserva) {
+      return res.status(404).json({ message: "Reserva no encontrada." });
+    }
 
-      res.status(200).json({ message: "Reserva eliminada correctamente.", reserva });
+    res
+      .status(200)
+      .json({ message: "Reserva eliminada correctamente.", reserva });
   } catch (error) {
-      res.status(500).json({ message: "Error al eliminar la reserva.", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error al eliminar la reserva.", error: error.message });
   }
 };
 
@@ -153,7 +168,8 @@ const getFilter = async (req, res) => {
   const query = {};
   if (filters.id) query.id = filters.id;
   if (filters.idHabitacion) query.idHabitacion = filters.idHabitacion;
-  if (filters["cliente.email"]) query["cliente.email"] = filters["cliente.email"];
+  if (filters["cliente.email"])
+    query["cliente.email"] = filters["cliente.email"];
   if (filters.numPersonas) query.numPersonas = filters.numPersonas;
   if (filters.fechaInicio) query.fechaInicio = new Date(filters.fechaInicio);
   if (filters.fechaSalida) query.fechaSalida = new Date(filters.fechaSalida);
@@ -164,22 +180,42 @@ const getFilter = async (req, res) => {
   try {
     const reservas = await Reserva.find(query);
     if (!reservas.length) {
-      return res.status(404).json({ message: "No se encontraron reservas con los filtros proporcionados." });
+      return res
+        .status(404)
+        .json({
+          message: "No se encontraron reservas con los filtros proporcionados.",
+        });
     }
 
     res.status(200).json(reservas);
   } catch (error) {
-    res.status(500).json({ error: "Error al filtrar reservas: " + error.message });
+    res
+      .status(500)
+      .json({ error: "Error al filtrar reservas: " + error.message });
   }
 };
 
 // updateReserva
 const updateReserva = async (req, res) => {
   try {
-    const { id, idHabitacion, cliente, precio, fechaInicio, fechaSalida, tipoHabitacion, numPersonas, extras } = req.body;
+    const {
+      id,
+      idHabitacion,
+      cliente,
+      precio,
+      fechaInicio,
+      fechaSalida,
+      tipoHabitacion,
+      numPersonas,
+      extras,
+    } = req.body;
 
     if (!id) {
-      return res.status(400).json({ message: "El ID de la reserva es obligatorio para la actualización." });
+      return res
+        .status(400)
+        .json({
+          message: "El ID de la reserva es obligatorio para la actualización.",
+        });
     }
 
     const reservaActualizada = await Reserva.findOneAndUpdate(
@@ -197,16 +233,23 @@ const updateReserva = async (req, res) => {
         numPersonas,
         extras,
       },
-      { new: true } 
+      { new: true }
     );
 
     if (!reservaActualizada) {
       return res.status(404).json({ message: "Reserva no encontrada." });
     }
 
-    res.status(200).json({ message: "Reserva actualizada correctamente.", reserva: reservaActualizada });
+    res
+      .status(200)
+      .json({
+        message: "Reserva actualizada correctamente.",
+        reserva: reservaActualizada,
+      });
   } catch (error) {
-    res.status(500).json({ error: `Error al actualizar la reserva: ${error.message}` });
+    res
+      .status(500)
+      .json({ error: `Error al actualizar la reserva: ${error.message}` });
   }
 };
 
