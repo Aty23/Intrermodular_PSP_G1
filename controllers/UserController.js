@@ -27,6 +27,24 @@ const createUser = async (req, res) => {
   }
 };
 
+//check user
+const checkUser = async(req, res)=> {
+  try{
+    const {email, password} = req.body;
+    const user = await User.findOne({ email });
+    if(!user){
+      return res.json({foundUser: false})
+    }
+    if (user.password === password) {
+      return res.json({ foundUser: true });
+    } else {
+      return res.json({ foundUser: false });
+    }
+  }catch(error){
+    res.status(500).json({ error: 'Error al obtener el usuario', error: error.message });
+  }
+}
+
 //get one
 const getUser = async (req, res) => {
   try {
@@ -88,6 +106,7 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
   createUser,
+  checkUser,
   getAllUsers,
   getUser,
   updateUser,
