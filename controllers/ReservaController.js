@@ -1,6 +1,7 @@
 const Reserva = require("../models/ReservaModel");
 const nodemailer = require("nodemailer");
 const Notificacion = require("../models/NotificacionModel");
+const Habitacion = require("../models/HabitacionModel");
 
 const transporter = nodemailer.createTransport({
   host: "in-v3.mailjet.com",
@@ -150,9 +151,17 @@ const deleteReserva = async (req, res) => {
       return res.status(404).json({ message: "Reserva no encontrada." });
     }
 
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Reserva con ID: ${id} eliminada.`,
+      fecha: new Date(),
+      tipo: "reserva",
+    });
+
+    await nuevaNotificacion.save();
+
     res
       .status(200)
-      .json({ message: "Reserva eliminada correctamente.", reserva });
+      .json({ message: "Reserva eliminada correctamente.", reserva, notificacion: nuevaNotificacion, });
   } catch (error) {
     res
       .status(500)
@@ -198,6 +207,8 @@ const getFilter = async (req, res) => {
 // updateReserva
 const updateReserva = async (req, res) => {
   try {
+    console.log("Datos recibidos para actualizar:", req.body); 
+
     const {
       id,
       idHabitacion,
@@ -209,6 +220,7 @@ const updateReserva = async (req, res) => {
       numPersonas,
       extras,
     } = req.body;
+
 
     if (!id) {
       return res
@@ -240,16 +252,90 @@ const updateReserva = async (req, res) => {
       return res.status(404).json({ message: "Reserva no encontrada." });
     }
 
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Reserva con ID: ${id} actualizada.`,
+      fecha: new Date(),
+      tipo: "reserva",
+    });
+
+    await nuevaNotificacion.save();
+
     res
       .status(200)
       .json({
         message: "Reserva actualizada correctamente.",
         reserva: reservaActualizada,
+        notificacion: nuevaNotificacion,
       });
   } catch (error) {
     res
       .status(500)
       .json({ error: `Error al actualizar la reserva: ${error.message}` });
+  }
+};
+
+const getHabitacionesDisponibles = async (req, res) => {
+  try {
+    const { fechaInicio, fechaSalida, numPersonas, extraCama } = req.body;
+
+    if (!fechaInicio || !fechaSalida || !numPersonas) {
+      return res.status(400).json({
+        message: "Los campos fechaInicio, fechaSalida y numPersonas son obligatorios.",
+      });
+    }
+
+    const entrada = new Date(fechaInicio);
+    const salida = new Date(fechaSalida);
+
+    if (entrada >= salida) {
+      return res.status(400).json({
+        message: "La fecha de salida debe ser posterior a la fecha de entrada.",
+      });
+    }
+
+    // Obtener todas las habitaciones
+    const habitaciones = await Habitacion.find().populate("tipoHabitacion");
+
+    // Obtener todas las reservas que solapan con las fechas dadas
+    const reservas = await Reserva.find({
+      $or: [
+        { fechaInicio: { $lt: salida }, fechaSalida: { $gt: entrada } },
+      ],
+    });
+
+    // Filtrar habitaciones disponibles
+    const habitacionesDisponibles = habitaciones.filter((habitacion) => {
+      const capacidad = extraCama ? habitacion.numPersonas + 1 : habitacion.numPersonas;
+      if (capacidad < numPersonas) return false;
+
+      // Verificar si esta habitación está reservada en las fechas dadas
+      const habitacionReservada = reservas.some((reserva) => reserva.idHabitacion === habitacion.idHabitacion);
+      return !habitacionReservada;
+    });
+
+    // Agrupar por tipo de habitación y tomar solo la primera disponible de cada tipo
+    const tiposDisponibles = {};
+    habitacionesDisponibles.forEach((habitacion) => {
+      const tipo = habitacion.tipoHabitacion.nombre;
+      if (!tiposDisponibles[tipo]) {
+        tiposDisponibles[tipo] = {
+          idHabitacion: habitacion.idHabitacion,
+          tipo: tipo,
+          precio: habitacion.tipoHabitacion.precioBase,
+          imagen: habitacion.imagenes.length > 0 ? habitacion.imagenes[0] : "/images/default.jpg",
+        };
+      }
+    });
+
+    const resultado = Object.values(tiposDisponibles);
+
+    if (resultado.length === 0) {
+      return res.status(404).json({ message: "No hay habitaciones disponibles para estos criterios." });
+    }
+
+    res.status(200).json(resultado);
+  } catch (error) {
+    res.status(500).json({ error: `Error al obtener habitaciones disponibles: ${error.message}` });
   }
 };
 
@@ -259,4 +345,5 @@ module.exports = {
   deleteReserva,
   getFilter,
   updateReserva,
+  getHabitacionesDisponibles,
 };
