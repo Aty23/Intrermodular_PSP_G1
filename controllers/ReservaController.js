@@ -60,48 +60,76 @@ const createReserva = async (req, res) => {
     const nuevaNotificacion = new Notificacion({
       mensaje: `Creada reserva con ID: ${newReserva.id}`,
       fecha: new Date(),
-      tipo: "reserva", // Puedes categorizarlo si quieres
+      tipo: "reserva", 
     });
 
     await nuevaNotificacion.save();
 
     /*if (cliente?.email) {
       const mailOptions = {
-        from: "intermodularg1@gmail.com", 
+        from: "intermodularg1@gmail.com",
         to: cliente.email,
         subject: "Confirmación de Reserva 🏨 - Hotel Pere Maria",
         html: `
-          <table width="100%" cellspacing="0" cellpadding="0" border="0">
+          <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f5f5f5; padding: 20px; font-family: 'Poppins', Arial, sans-serif;">
   <tr>
-    <!-- Columna izquierda: Texto -->
-    <td width="50%" style="padding: 20px; vertical-align: top;">
-      <h2 style="font-family: Arial, sans-serif; 
-           font-size: 28px; 
-           font-weight: bold; 
-           color: #248195; 
-           margin: 0; 
-           padding-bottom: 10px;">
-  ¡Tu reserva está confirmada!
-</h2>
-      <p>Hola <strong>${cliente.nombre || "Cliente"}</strong>,</p>
-      <p>Tu reserva ha sido creada exitosamente.</p>
-      <ul>
-        <li><strong>Habitación:</strong> ${idHabitacion}</li>
-        <li><strong>Tipo:</strong> ${tipoHabitacion || "No especificado"}</li>
-        <li><strong>Fecha de entrada:</strong> ${new Date(fechaInicio).toLocaleDateString()}</li>
-        <li><strong>Fecha de salida:</strong> ${new Date(fechaSalida).toLocaleDateString()}</li>
-        <li><strong>Número de personas:</strong> ${numPersonas}</li>
-        <li><strong>Extras:</strong> ${extras}</li>
-        <li><strong>Precio:</strong> ${precio}€</li>
-      </ul>
-      <p>¡Gracias por confiar en nosotros! 🏨✨</p>
-    </td>
+    <td align="center">
+      <table width="600px" cellspacing="0" cellpadding="0" border="0" style="background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+        
+        <tr>
+          <td style="background: #278498; padding: 20px; text-align: center;">
+            <h2 style="color: #ffffff; font-size: 24px; margin: 0;">¡Tu reserva está confirmada! 🎉</h2>
+          </td>
+        </tr>
 
-    <!-- Columna derecha: Imagen 100% -->
-    <td width="50%" style="padding: 0; margin: 0;">
-      <img src="https://i.imgur.com/0NYwFWh.jpeg" 
-           alt="Habitación del Hotel" 
-           style="width: 100%; height: auto; display: block; border-radius: 0;">
+        <tr>
+          <td style="padding: 20px;">
+            <p style="font-size: 16px; color: #333; margin: 0;">Hola <strong>${
+              cliente.nombre || "Cliente"
+            }</strong>,</p>
+            <p style="font-size: 16px; color: #555; margin-top: 8px;">Tu reserva ha sido creada exitosamente.</p>
+
+            <table width="100%" cellspacing="0" cellpadding="10" border="0" style="margin-top: 10px;">
+              <tr>
+                <td style="color: #278498;"><strong>Habitación:</strong></td>
+                <td>${idHabitacion}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Tipo:</strong></td>
+                <td>${tipoHabitacion || "No especificado"}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Fecha de entrada:</strong></td>
+                <td>${new Date(fechaInicio).toLocaleDateString()}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Fecha de salida:</strong></td>
+                <td>${new Date(fechaSalida).toLocaleDateString()}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Número de personas:</strong></td>
+                <td>${numPersonas}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Extras:</strong></td>
+                <td>${extras}</td>
+              </tr>
+              <tr>
+                <td style="color: #278498;"><strong>Precio:</strong></td>
+                <td><strong>${precio}€</strong></td>
+              </tr>
+            </table>
+            
+            <p style="text-align: center; font-size: 14px; color: #666; margin-top: 15px;">¡Gracias por confiar en nosotros! 🏨✨</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td>
+            <img src="https://i.imgur.com/0NYwFWh.jpeg" alt="Habitación del Hotel" width="100%" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; display: block;">
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 </table>
@@ -161,7 +189,11 @@ const deleteReserva = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "Reserva eliminada correctamente.", reserva, notificacion: nuevaNotificacion, });
+      .json({
+        message: "Reserva eliminada correctamente.",
+        reserva,
+        notificacion: nuevaNotificacion,
+      });
   } catch (error) {
     res
       .status(500)
@@ -176,18 +208,22 @@ const getFilter = async (req, res) => {
 
   if (filters.id) query.id = filters.id;
   if (filters.idHabitacion) query.idHabitacion = filters.idHabitacion;
-  if (filters["cliente.email"]) query["cliente.email"] = filters["cliente.email"];
+  if (filters["cliente.email"])
+    query["cliente.email"] = filters["cliente.email"];
   if (filters.numPersonas) query.numPersonas = filters.numPersonas;
   if (filters.tipoHabitacion) query.tipoHabitacion = filters.tipoHabitacion;
 
   if (filters.fechaInicio && filters.fechaSalida) {
     const fechaInicio = new Date(filters.fechaInicio);
     const fechaSalida = new Date(filters.fechaSalida);
-    
+
     query.$or = [
-      { fechaInicio: { $gte: fechaInicio, $lte: fechaSalida } }, 
-      { fechaSalida: { $gte: fechaInicio, $lte: fechaSalida } }, 
-      { fechaInicio: { $lte: fechaInicio }, fechaSalida: { $gte: fechaSalida } } 
+      { fechaInicio: { $gte: fechaInicio, $lte: fechaSalida } },
+      { fechaSalida: { $gte: fechaInicio, $lte: fechaSalida } },
+      {
+        fechaInicio: { $lte: fechaInicio },
+        fechaSalida: { $gte: fechaSalida },
+      },
     ];
   }
 
@@ -196,19 +232,25 @@ const getFilter = async (req, res) => {
   try {
     const reservas = await Reserva.find(query);
     if (!reservas.length) {
-      return res.status(404).json({ message: "No se encontraron reservas con los filtros proporcionados." });
+      return res
+        .status(404)
+        .json({
+          message: "No se encontraron reservas con los filtros proporcionados.",
+        });
     }
 
     res.status(200).json(reservas);
   } catch (error) {
-    res.status(500).json({ error: "Error al filtrar reservas: " + error.message });
+    res
+      .status(500)
+      .json({ error: "Error al filtrar reservas: " + error.message });
   }
 };
 
 // updateReserva
 const updateReserva = async (req, res) => {
   try {
-    console.log("Datos recibidos para actualizar:", req.body); 
+    console.log("Datos recibidos para actualizar:", req.body);
 
     const {
       id,
@@ -222,13 +264,10 @@ const updateReserva = async (req, res) => {
       extras,
     } = req.body;
 
-
     if (!id) {
-      return res
-        .status(400)
-        .json({
-          message: "El ID de la reserva es obligatorio para la actualización.",
-        });
+      return res.status(400).json({
+        message: "El ID de la reserva es obligatorio para la actualización.",
+      });
     }
 
     const reservaActualizada = await Reserva.findOneAndUpdate(
@@ -261,13 +300,11 @@ const updateReserva = async (req, res) => {
 
     await nuevaNotificacion.save();
 
-    res
-      .status(200)
-      .json({
-        message: "Reserva actualizada correctamente.",
-        reserva: reservaActualizada,
-        notificacion: nuevaNotificacion,
-      });
+    res.status(200).json({
+      message: "Reserva actualizada correctamente.",
+      reserva: reservaActualizada,
+      notificacion: nuevaNotificacion,
+    });
   } catch (error) {
     res
       .status(500)
@@ -281,7 +318,8 @@ const getHabitacionesDisponibles = async (req, res) => {
 
     if (!fechaInicio || !fechaSalida || !numPersonas) {
       return res.status(400).json({
-        message: "Los campos fechaInicio, fechaSalida y numPersonas son obligatorios.",
+        message:
+          "Los campos fechaInicio, fechaSalida y numPersonas son obligatorios.",
       });
     }
 
@@ -299,18 +337,20 @@ const getHabitacionesDisponibles = async (req, res) => {
 
     // Obtener todas las reservas que solapan con las fechas dadas
     const reservas = await Reserva.find({
-      $or: [
-        { fechaInicio: { $lt: salida }, fechaSalida: { $gt: entrada } },
-      ],
+      $or: [{ fechaInicio: { $lt: salida }, fechaSalida: { $gt: entrada } }],
     });
 
     // Filtrar habitaciones disponibles
     const habitacionesDisponibles = habitaciones.filter((habitacion) => {
-      const capacidad = extraCama ? habitacion.numPersonas + 1 : habitacion.numPersonas;
+      const capacidad = extraCama
+        ? habitacion.numPersonas + 1
+        : habitacion.numPersonas;
       if (capacidad < numPersonas) return false;
 
       // Verificar si esta habitación está reservada en las fechas dadas
-      const habitacionReservada = reservas.some((reserva) => reserva.idHabitacion === habitacion.idHabitacion);
+      const habitacionReservada = reservas.some(
+        (reserva) => reserva.idHabitacion === habitacion.idHabitacion
+      );
       return !habitacionReservada;
     });
 
@@ -323,7 +363,10 @@ const getHabitacionesDisponibles = async (req, res) => {
           idHabitacion: habitacion.idHabitacion,
           tipo: tipo,
           precio: habitacion.tipoHabitacion.precioBase,
-          imagen: habitacion.imagenes.length > 0 ? habitacion.imagenes[0] : "/images/default.jpg",
+          imagen:
+            habitacion.imagenes.length > 0
+              ? habitacion.imagenes[0]
+              : "/images/default.jpg",
         };
       }
     });
@@ -331,12 +374,20 @@ const getHabitacionesDisponibles = async (req, res) => {
     const resultado = Object.values(tiposDisponibles);
 
     if (resultado.length === 0) {
-      return res.status(404).json({ message: "No hay habitaciones disponibles para estos criterios." });
+      return res
+        .status(404)
+        .json({
+          message: "No hay habitaciones disponibles para estos criterios.",
+        });
     }
 
     res.status(200).json(resultado);
   } catch (error) {
-    res.status(500).json({ error: `Error al obtener habitaciones disponibles: ${error.message}` });
+    res
+      .status(500)
+      .json({
+        error: `Error al obtener habitaciones disponibles: ${error.message}`,
+      });
   }
 };
 
