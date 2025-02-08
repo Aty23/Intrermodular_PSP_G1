@@ -1,5 +1,6 @@
 const TipoHabitacion = require('../models/TipoHabitacionModel');
 const Habitacion = require('../models/HabitacionModel');
+const Notificacion = require("../models/NotificacionModel");
 
 const createTipoHabitacion = async (req, res) => {
   try {
@@ -13,6 +14,15 @@ const createTipoHabitacion = async (req, res) => {
     });
 
     await nuevoTipo.save();
+
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Creada tipo habitación: ${nuevoTipo.nombre}`,
+      fecha: new Date(),
+      tipo: "tipoHabitacion", 
+    });
+
+    await nuevaNotificacion.save();
+
     res.status(201).json({ message: "Tipo de habitación creado con éxito", tipo: nuevoTipo });
   } catch (error) {
     res.status(400).json({ error: `Error al crear el tipo de habitación: ${error.message}` });
@@ -64,6 +74,14 @@ const updateTipoHabitacion = async (req, res) => {
       { new: true }
     );
 
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Actualizado tipo habitación: ${nombre}`,
+      fecha: new Date(),
+      tipo: "tipoHabitacion", 
+    });
+
+    await nuevaNotificacion.save();
+
     res.status(200).json({ message: "Tipo de habitación actualizado correctamente", tipo: tipoActualizado });
 
   } catch (error) {
@@ -94,6 +112,15 @@ const deleteTipoHabitacion = async (req, res) => {
     }
 
     await TipoHabitacion.findByIdAndDelete(tipo._id);
+
+    const nuevaNotificacion = new Notificacion({
+      mensaje: `Eliminado tipo habitación: ${nombre}`,
+      fecha: new Date(),
+      tipo: "tipoHabitacion", 
+    });
+
+    await nuevaNotificacion.save();
+
     res.status(200).json({ message: "Tipo de habitación eliminado correctamente." });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar el tipo de habitación" });
