@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post('/create', createTipoHabitacion);
 router.get('/getAll', getAllTiposHabitacion);
-router.put('/update', updateTipoHabitacion);
-router.delete('/delete', deleteTipoHabitacion);
+router.patch('/update', updateTipoHabitacion);
+router.post('/delete', deleteTipoHabitacion);
 
 module.exports = router;
