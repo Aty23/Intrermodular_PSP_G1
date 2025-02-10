@@ -74,7 +74,8 @@ const getAllHabitaciones = async (req, res) => {
       tamanyo: habitacion.tamanyo,
       descripcion: habitacion.descripcion,
       imagenes: habitacion.imagenes.map(img => `/images/${path.basename(img)}`),
-      precio: habitacion.tipoHabitacion.precioBase
+      precio: habitacion.tipoHabitacion.precioBase,
+      servicios: habitacion.tipoHabitacion.servicios || []
     }));
 
     res.status(200).json(habitacionesConTipo);
