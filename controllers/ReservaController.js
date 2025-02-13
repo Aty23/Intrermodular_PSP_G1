@@ -395,8 +395,11 @@ const getHabitacionesDisponibles = async (req, res) => {
 
 const getPrimerasHabitacionesDisponibles = async (req, res) => {
   try {
-    console.log("Se ha realizado una consulta");
     const { fechaInicio, fechaSalida, numPersonas, extraCama } = req.body;
+    console.log("Se ha realizado una consulta: ",req.body);
+
+    const numPersonasInt = parseInt(numPersonas, 10) || 1; 
+    const extraCamaBool = extraCama === 'true'; 
 
     if (!fechaInicio || !fechaSalida || !numPersonas) {
       return res.status(400).json({
@@ -423,8 +426,8 @@ const getPrimerasHabitacionesDisponibles = async (req, res) => {
 
     // 🔹 Filtrar habitaciones disponibles
     const habitacionesDisponibles = habitaciones.filter((habitacion) => {
-      const capacidad = extraCama ? habitacion.numPersonas + 1 : habitacion.numPersonas;
-      if (capacidad < numPersonas) return false;
+      const capacidad = extraCamaBool ? habitacion.numPersonas + 1 : habitacion.numPersonas;
+      if (capacidad < numPersonasInt) return false;
 
       // 🔹 Verificar si la habitación está reservada en las fechas dadas
       const habitacionReservada = reservas.some(
@@ -454,6 +457,7 @@ const getPrimerasHabitacionesDisponibles = async (req, res) => {
       precio: habitacion.tipoHabitacion.precioBase,
       servicios: habitacion.tipoHabitacion.servicios || [],
     }));
+    console.log(resultado);
 
     if (resultado.length === 0) {
       return res.status(404).json({ message: "No hay habitaciones disponibles para estos criterios." });
