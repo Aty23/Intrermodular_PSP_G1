@@ -1,4 +1,6 @@
 const User = require('../models/UserModel');
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 //create
 const createUser = async (req, res) => {
@@ -28,31 +30,31 @@ const createUser = async (req, res) => {
 };
 
 //check user
-const checkUser = async(req, res)=> {
-  try{
-    const {email, password} = req.body;
+const checkUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if(!user){
-      return res.json({foundUser: false})
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: "Usuario o contraseña incorrectos" });
     }
-    if (user.password === password) {
-      return res.json({ foundUser: true });
-    } else {
-      return res.json({ foundUser: false });
-    }
-  }catch(error){
-    res.status(500).json({ error: 'Error al obtener el usuario', error: error.message });
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "2h" });
+    res.status(200).json({ token });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor", error: error.message });
   }
-}
+};
 
 //get one
 const getUser = async (req, res) => {
   try {
-    const email = req.params.id;
-    const user = await User.findOne({ _email: email })
-    if(!user){
-      return res.status(404).json({message:"Usuario no encontrado"});
+    const email = req.params.email
+    console.log('Email recibido:', email); ; 
+    const user = await User.findOne({ email: email }); 
+    
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
+    
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener el usuario', error: error.message });
@@ -70,8 +72,9 @@ const getAllUsers = async (req, res) =>{
 //update
 const updateUser = async (req, res) => {
   try {
-    const email = req.params.email;
-    const user = await User.findOne({ _email: email })
+    const email = req.params.email
+    console.log('Email recibido:', email); ; 
+    const user = await User.findOne({ email: email }); 
     const updates = req.body;    
     const updatedUser = await User.findByIdAndUpdate(user, updates, {
       new: true, 
