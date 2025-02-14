@@ -1,6 +1,7 @@
 const Habitacion = require("../models/HabitacionModel");
 const TipoHabitacion = require("../models/TipoHabitacionModel");
 const Notificacion = require("../models/NotificacionModel");
+const Reserva = require("../models/ReservaModel");
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
@@ -236,9 +237,27 @@ const deleteHabitacion = async (req, res) => {
     }
 
     const habitacion = await Habitacion.findOne({ idHabitacion }).populate("tipoHabitacion");
-
     if (!habitacion) {
       return res.status(404).json({ message: "Habitación no encontrada." });
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const reservasActivas = await Reserva.find({
+      idHabitacion,
+      fechaInicio: { $gte: hoy }
+    });
+
+    if (reservasActivas.length > 0) {
+      return res.status(400).json({
+        message: `No se puede eliminar la habitación ${idHabitacion} porque tiene reservas activas.`,
+        reservas: reservasActivas.map(reserva => ({
+          id: reserva.id,
+          fechaInicio: reserva.fechaInicio.toISOString().split("T")[0], // YYYY-MM-DD
+          fechaSalida: reserva.fechaSalida.toISOString().split("T")[0]
+        }))
+      });
     }
 
     await Habitacion.findOneAndDelete({ idHabitacion });
@@ -246,26 +265,15 @@ const deleteHabitacion = async (req, res) => {
     const nuevaNotificacion = new Notificacion({
       mensaje: `Eliminada habitación con ID: ${idHabitacion}`,
       fecha: new Date(),
-      tipo: "habitacion", 
+      tipo: "habitacion",
     });
-
     await nuevaNotificacion.save();
 
-    res.status(200).json({
-      message: "Habitación eliminada correctamente.",
-      habitacion: {
-        idHabitacion: habitacion.idHabitacion,
-        tipoHabitacion: habitacion.tipoHabitacion.nombre,
-        numPersonas: habitacion.numPersonas,
-        estado: habitacion.estado,
-        tamanyo: habitacion.tamanyo,
-        descripcion: habitacion.descripcion,
-        imagenes: habitacion.imagenes
-      }
-    });
+    res.status(200).json({ message: `Habitación ${idHabitacion} eliminada con éxito.` });
+
   } catch (error) {
-    console.error("Error al eliminar la habitación:", error);
-    res.status(500).json({ error: `Error al eliminar la habitación: ${error.message}` });
+    console.error("Error en deleteHabitacion:", error);
+    res.status(500).json({ error: "Error interno del servidor", detalles: error.message });
   }
 };
 
