@@ -39,7 +39,6 @@ const createReserva = async (req, res) => {
     const fechaInicioUTC = new Date(req.body.fechaInicio);
     const fechaSalidaUTC = new Date(req.body.fechaSalida);
 
-    // Corregir la fecha sumando un día
     fechaInicioUTC.setDate(fechaInicioUTC.getDate() + 1);
     fechaSalidaUTC.setDate(fechaSalidaUTC.getDate() + 1);
 
@@ -61,13 +60,13 @@ const createReserva = async (req, res) => {
 
     const nuevaNotificacion = new Notificacion({
       mensaje: `Creada reserva con ID: ${newReserva.id}`,
-      fecha: new Date(),
+      fecha: new Date(new Date().setDate(new Date().getDate() + 1)),
       tipo: "reserva", 
     });
 
     await nuevaNotificacion.save();
 
-    /*if (cliente?.email) {
+    if (cliente?.email) {
       const mailOptions = {
         from: "intermodularg1@gmail.com",
         to: cliente.email,
@@ -140,7 +139,7 @@ const createReserva = async (req, res) => {
 
       await transporter.sendMail(mailOptions);
       console.log("Correo enviado correctamente a", cliente.email);
-    }*/
+    }
 
     res.status(201).json({
       message: "Reserva creada con éxito",
@@ -314,85 +313,7 @@ const updateReserva = async (req, res) => {
   }
 };
 
-const getHabitacionesDisponibles = async (req, res) => {
-  try {
-    const { fechaInicio, fechaSalida, numPersonas, extraCama } = req.body;
-
-    if (!fechaInicio || !fechaSalida || !numPersonas) {
-      return res.status(400).json({
-        message:
-          "Los campos fechaInicio, fechaSalida y numPersonas son obligatorios.",
-      });
-    }
-
-    const entrada = new Date(fechaInicio);
-    const salida = new Date(fechaSalida);
-
-    if (entrada >= salida) {
-      return res.status(400).json({
-        message: "La fecha de salida debe ser posterior a la fecha de entrada.",
-      });
-    }
-
-    // Obtener todas las habitaciones
-    const habitaciones = await Habitacion.find().populate("tipoHabitacion");
-
-    // Obtener todas las reservas que solapan con las fechas dadas
-    const reservas = await Reserva.find({
-      $or: [{ fechaInicio: { $lt: salida }, fechaSalida: { $gt: entrada } }],
-    });
-
-    // Filtrar habitaciones disponibles
-    const habitacionesDisponibles = habitaciones.filter((habitacion) => {
-      const capacidad = extraCama
-        ? habitacion.numPersonas + 1
-        : habitacion.numPersonas;
-      if (capacidad < numPersonas) return false;
-
-      // Verificar si esta habitación está reservada en las fechas dadas
-      const habitacionReservada = reservas.some(
-        (reserva) => reserva.idHabitacion === habitacion.idHabitacion
-      );
-      return !habitacionReservada;
-    });
-
-    // Agrupar por tipo de habitación y tomar solo la primera disponible de cada tipo
-    const tiposDisponibles = {};
-    habitacionesDisponibles.forEach((habitacion) => {
-      const tipo = habitacion.tipoHabitacion.nombre;
-      if (!tiposDisponibles[tipo]) {
-        tiposDisponibles[tipo] = {
-          idHabitacion: habitacion.idHabitacion,
-          tipo: tipo,
-          precio: habitacion.tipoHabitacion.precioBase,
-          imagen:
-            habitacion.imagenes.length > 0
-              ? habitacion.imagenes[0]
-              : "/images/default.jpg",
-        };
-      }
-    });
-
-    const resultado = Object.values(tiposDisponibles);
-
-    if (resultado.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message: "No hay habitaciones disponibles para estos criterios.",
-        });
-    }
-
-    res.status(200).json(resultado);
-  } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: `Error al obtener habitaciones disponibles: ${error.message}`,
-      });
-  }
-};
-
+// getPrimerasHabitacionesDisponibles
 const getPrimerasHabitacionesDisponibles = async (req, res) => {
   try {
     const { fechaInicio, fechaSalida, numPersonas, extraCama } = req.body;
@@ -416,27 +337,22 @@ const getPrimerasHabitacionesDisponibles = async (req, res) => {
       });
     }
 
-    // 🔹 Obtener todas las habitaciones disponibles (no en mantenimiento)
     const habitaciones = await Habitacion.find({ estado: "Disponible" }).populate("tipoHabitacion");
 
-    // 🔹 Obtener reservas en el rango de fechas para verificar disponibilidad
     const reservas = await Reserva.find({
       $or: [{ fechaInicio: { $lt: salida }, fechaSalida: { $gt: entrada } }],
     });
 
-    // 🔹 Filtrar habitaciones disponibles
     const habitacionesDisponibles = habitaciones.filter((habitacion) => {
       const capacidad = extraCamaBool ? habitacion.numPersonas + 1 : habitacion.numPersonas;
       if (capacidad < numPersonasInt) return false;
 
-      // 🔹 Verificar si la habitación está reservada en las fechas dadas
       const habitacionReservada = reservas.some(
         (reserva) => reserva.idHabitacion === habitacion.idHabitacion
       );
       return !habitacionReservada;
     });
 
-    // 🔹 Agrupar habitaciones por tipo y seleccionar solo la primera disponible de cada tipo
     const habitacionesPorTipo = {};
     habitacionesDisponibles.forEach((habitacion) => {
       const tipo = habitacion.tipoHabitacion.nombre;
@@ -445,7 +361,6 @@ const getPrimerasHabitacionesDisponibles = async (req, res) => {
       }
     });
 
-    // 🔹 Convertir a lista de habitaciones completas en el mismo formato que getAllHabitaciones
     const resultado = Object.values(habitacionesPorTipo).map((habitacion) => ({
       idHabitacion: habitacion.idHabitacion,
       tipoHabitacion: habitacion.tipoHabitacion.nombre,
@@ -476,6 +391,5 @@ module.exports = {
   deleteReserva,
   getFilter,
   updateReserva,
-  getHabitacionesDisponibles,
   getPrimerasHabitacionesDisponibles,
 };
